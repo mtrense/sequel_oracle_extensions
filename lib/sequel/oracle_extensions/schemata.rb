@@ -51,7 +51,7 @@ module Sequel
 					
 					# Basic partitioning info.
 					attributes[:partitioning] = Hash[
-						ds.select(:partitioning_type.as(:type), :interval, :subpartitioning_type.as(:subtype)).
+						ds.select(Sequel.as(:partitioning_typ, :type), :interval, Sequel.as(:subpartitioning_type, :subtype)).
 		    	    from(:"#{who}_part_tables").first(:table_name=>table).
 		    	    map{|k,v| [k, k==:interval ? v : v.downcase.to_sym] }
 			   	]
@@ -135,7 +135,7 @@ module Sequel
 				        from(:"#{who}_indexes___i").
 				        join(:"#{who}_ind_columns___ic", [ [:index_name,:index_name] ]).
 								where(:i__table_name=>table, :i__dropped=>'NO').
-	              order(:status.desc, :index_name, :ic__column_position)
+	              order(Sequel.desc(:status), :index_name, :ic__column_position)
 				ds = ds.where :i__owner => schema, :c__index_owner => schema  unless schema.nil?
 				ds = ds.where :i__status => (opts[:valid] ? 'VALID' : 'UNUSABLE') unless opts[:valid].nil?
 
@@ -470,12 +470,12 @@ module Sequel
 				        from(:"#{x_cons}traints___c").
 				        join(:"#{x_cons}_columns___cc", [ [:owner,:owner], [:constraint_name,:constraint_name] ]).
 								where((options[:table_name_column]||:c__table_name)=>table, :c__constraint_type=>constraint_type).
-	              order(:table_name, :status.desc, :constraint_name, :cc__position)
+	              order(:table_name, Sequel.desc(:status), :constraint_name, :cc__position)
 				ds = ds.where :c__owner => schema unless schema.nil?
 				ds = ds.where :c__status => (options[:enabled] ? 'ENABLED' : 'DISABLED') unless options[:enabled].nil?
 				ds = ds.where :c__validated => (options[:validated] ? 'VALIDATED' : 'NOT VALIDATED') unless options[:validated].nil?
 				if constraint_type == 'R'
-	        ds = ds.select_more(:c__r_constraint_name, :t__table_name.as(:r_table_name)).
+	        ds = ds.select_more(:c__r_constraint_name, Sequel.as(:t__table_name, :r_table_name)).
 					        join(:"#{x_cons}traints___t", [ [:owner,:c__r_owner], [:constraint_name,:c__r_constraint_name] ]).
 	                where(:t__constraint_type=>'P')
 				else
